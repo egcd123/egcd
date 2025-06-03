@@ -236,12 +236,32 @@ jobs:
     
       - name: Add sched_ext
         run: |
+         # 克隆仓库到工作目录
          cd kernel_workspace/kernel_platform/
-         git clone https://github.com/egcd123/sched_ext.git
+         git clone https://github.com/egcd521/sched_ext.git
+
+         # 将文件复制到内核源代码目录
          cp -r ./sched_ext/* ./common/kernel/sched
+
+         # 删除 .git 目录
          rm -rf ./sched_ext/.git
+
+         # 进入 sched 目录并修改 build_policy.c 文件
          cd common/kernel/sched
          sed -i.bak '/# include "ext.c"/a\# include "hmbird_sched_proc_main.c"\n#endif\n\n#ifdef CONFIG_SLIM_SCHED\n# include "slim_sysctl.c"' build_policy.c
+
+         # 修改 Kconfig 配置文件
+         cd ../../drivers/cpufreq/
+         echo "config OPLUS_SCHEDULE" >> Kconfig
+         echo "  bool \"Enable Oplus Scheduling Features\"" >> Kconfig
+         echo "  default y" >> Kconfig
+         echo "  help" >> Kconfig
+         echo "    Enable the Oplus-specific CPU scheduling optimizations." >> Kconfig
+
+         # 返回内核根目录并修改 Makefile
+         cd ../../../
+         echo "obj-y += drivers/cpufreq/cpufreq_scx_main.o" >> Makefile
+         echo "obj-y += drivers/cpufreq/scx_shadow_tick.o" >> Makefile
                    
       - name: Set build timestamp
         run: |         
